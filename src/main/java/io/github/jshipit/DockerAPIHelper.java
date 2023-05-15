@@ -3,11 +3,9 @@ package io.github.jshipit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.tongfei.progressbar.*;
 
 import java.io.*;
 import java.net.*;
-import java.sql.Blob;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -46,7 +44,7 @@ public class DockerAPIHelper {
         URL url_obj = null;
         try {
             url_obj = new URI("https://"+this.apiRepo+"/v2/").toURL();
-            System.out.println(url_obj.toString());
+            System.out.println(url_obj);
         } catch (URISyntaxException | MalformedURLException e) {
             e.printStackTrace();
         }
@@ -70,7 +68,7 @@ public class DockerAPIHelper {
         URL url_obj = null;
         try {
             url_obj = new URI(this.authURL + "?scope=repository:" + this.repository + "/" + this.image + ":pull"  + "&service=" + this.authService).toURL();
-            System.out.println(url_obj.toString());
+            System.out.println(url_obj);
         } catch (URISyntaxException | MalformedURLException e) {
             System.out.println("URISyntaxException | MalformedURLException");
             e.printStackTrace();
@@ -105,7 +103,7 @@ public class DockerAPIHelper {
         URL url_obj = null;
         try {
             url_obj = new URI("https://" + this.apiRepo + "/v2/" + this.repository + "/" + this.image + "/manifests/"+this.tag).toURL();
-            System.out.println(url_obj.toString());
+            System.out.println(url_obj);
         } catch(URISyntaxException | MalformedURLException e) {
             System.out.println("URISyntaxException | MalformedURLException");
             e.printStackTrace();

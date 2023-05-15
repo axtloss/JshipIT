@@ -8,19 +8,14 @@ import java.nio.file.Path;
 
 public class JshipIT {
 
-    public int finishedCount;
-    public int downloadThreads;
-
-    public JshipIT(String[] args) {
+    public JshipIT() {
         DockerAPIHelper api = new DockerAPIHelper("registry.getcryst.al","crystal/misc", "docker", "latest");
         JsonNode manifest = null;
 
         System.out.println("API Token: " + api.getApiToken());
         try {
             manifest = api.fetchManifestJson();
-        } catch (IOException e) {
-
-        }
+        } catch (IOException ignored) {} // Proper error handling is bloat
 
         System.out.println("Manifest: " + manifest);
 
@@ -33,15 +28,12 @@ public class JshipIT {
             return;
         }
 
-        finishedCount = 0;
-        downloadThreads = 0;
-
+        assert manifest != null;
         JsonNode layers = manifest.get("layers");
         for (JsonNode layer : layers) {
             System.out.println("Layer: " + layer);
             try {
                 api.fetchBlob(layer.get("digest").asText(), path.toString());
-                downloadThreads = downloadThreads+1;
             } catch (IOException e) {
                 e.printStackTrace();
             }

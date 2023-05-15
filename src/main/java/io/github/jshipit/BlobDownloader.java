@@ -26,7 +26,7 @@ public class BlobDownloader extends Thread {
         URL url_obj = null;
         try {
             url_obj = new URI(this.url).toURL();
-            System.out.println(url_obj.toString());
+            System.out.println(url_obj);
         } catch(URISyntaxException | MalformedURLException e) {
             System.out.println("URISyntaxException | MalformedURLException");
             e.printStackTrace();
