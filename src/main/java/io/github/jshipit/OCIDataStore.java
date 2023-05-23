@@ -18,7 +18,7 @@ public class OCIDataStore {
 
     public OCIDataStore(String path) {
         this.path = path;
-        this.databasePath = path + "/datstore.db";
+        this.databasePath = path + "/datastore.db";
         createStore();
         try {
             createStoreDatabase();
@@ -34,8 +34,11 @@ public class OCIDataStore {
         try {
             Files.createDirectory(path);
         } catch (IOException e) {
-            System.out.println("Failed to create directory: " + path);
-            e.printStackTrace();
+            if (!(e instanceof FileAlreadyExistsException)) {
+                System.out.println("Failed to create directory: " + path);
+                e.printStackTrace();
+                return;
+            }
         }
     }
 
@@ -57,6 +60,40 @@ public class OCIDataStore {
         }
     }
 
+    public void addBlobToDatabase(String blob) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                statement.executeUpdate("INSERT INTO blobs (digest, path) VALUES ('" + blob + "', '" + this.path + "/blobs/" + blob + "')");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public boolean isBlobInDatabase(String blob) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                ResultSet rs = statement.executeQuery("SELECT * FROM blobs WHERE digest = '" + blob + "'");
+                return rs.next();
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
     public void createImage(String apiRepo, String repo, String image, String tag) {
 
         Path imgPath = Path.of(this.path+"/"+image);
@@ -76,6 +113,9 @@ public class OCIDataStore {
         }
 
         DockerAPIHelper api = new DockerAPIHelper(apiRepo, repo, image, tag);
+
+        System.out.println("API Token: " + api.getApiToken());
+
         JsonNode manifest = null;
 
         try {
@@ -112,7 +152,12 @@ public class OCIDataStore {
             System.out.println("Layer: " + layer);
 
             try {
-                api.fetchBlob(layer.get("digest").asText(), layerpath);
+                if (!isBlobInDatabase(layer.get("digest").asText())) {
+                    api.fetchBlob(layer.get("digest").asText(), layerpath);
+                    addBlobToDatabase(layer.get("digest").asText());
+                } else {
+                    System.out.println("Blob already in database: " + layer.get("digest").asText());
+                }
                 digests.add(layer.get("digest").asText());
             } catch (IOException e) {
                 e.printStackTrace();

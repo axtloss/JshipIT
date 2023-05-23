@@ -43,6 +43,6 @@ public class JshipIT {
          */
 
         OCIDataStore dataStore = new OCIDataStore("./tmp");
-        dataStore.createImage("registry.getcryst.al","crystal/misc", "docker", "latest");
+        dataStore.createImage("registry.docker.io","library", "bash", "devel-alpine3.18");
     }
 }

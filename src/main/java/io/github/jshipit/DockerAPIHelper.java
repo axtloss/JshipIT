@@ -35,7 +35,6 @@ public class DockerAPIHelper {
             getAuthenticationUrl();
             apiToken = generateAPIToken();
         } catch (IOException | RuntimeException e) {
-            System.out.println("IOException | RuntimeException");
             e.printStackTrace();
         }
     }
@@ -55,7 +54,11 @@ public class DockerAPIHelper {
         con.connect();
         if (con.getResponseCode() == 401 ) {
             Map<String, List<String>> headers = con.getHeaderFields();
-            List<String> authenticate = headers.get("Www-Authenticate");
+            List<String> authenticate = headers.get("www-authenticate");
+            if (authenticate == null) {
+                authenticate = headers.get("Www-Authenticate"); // Some registries (registry.getcryst.al) do this for some reason
+            }
+            assert authenticate != null;
             this.authURL = authenticate.get(0).replace("Bearer realm=", "").replace("\"", "").split(",")[0];
             this.authService = authenticate.get(0).replace("service=", "").replace("\"", "").split(",")[1];
         } else {
