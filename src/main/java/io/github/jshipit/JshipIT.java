@@ -9,6 +9,7 @@ import java.nio.file.Path;
 public class JshipIT {
 
     public JshipIT() {
+        /*
         DockerAPIHelper api = new DockerAPIHelper("registry.getcryst.al","crystal/misc", "docker", "latest");
         JsonNode manifest = null;
 
@@ -38,5 +39,10 @@ public class JshipIT {
                 e.printStackTrace();
             }
         }
+
+         */
+
+        OCIDataStore dataStore = new OCIDataStore("./tmp");
+        dataStore.createImage("registry.getcryst.al","crystal/misc", "docker", "latest");
     }
 }
