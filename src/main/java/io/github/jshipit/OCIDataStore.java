@@ -52,7 +52,7 @@ public class OCIDataStore {
                 statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
                 statement.executeUpdate("CREATE TABLE IF NOT EXISTS blobs (id INTEGER PRIMARY KEY AUTOINCREMENT, digest TEXT, path TEXT)");
-                statement.executeUpdate("CREATE TABLE IF NOT EXISTS containers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, id TEXT, path TEXT)");
+                statement.executeUpdate("CREATE TABLE IF NOT EXISTS containers (containerID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, id TEXT, path TEXT)");
                 System.out.println("A new database has been created.");
             }
 
@@ -111,6 +111,24 @@ public class OCIDataStore {
         }
     }
 
+    public String getContainerPath(String name, String id) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "' AND id = '" + id + "'");
+                return rs.getString("path");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
     public String createContainerDirectory(String image, String tag, String name, String id) {
         Path containerPath = Path.of(this.path+"/"+image+"/"+tag+"/"+name+"_"+id);
         try {
@@ -167,7 +185,6 @@ public class OCIDataStore {
 
         assert manifest != null;
         JsonNode layers = manifest.get("layers");
-        List<String> digests = new ArrayList<String>();
         String layerpath = this.path+"/blobs";
         try {
             Files.createDirectory(Path.of(layerpath));
@@ -178,38 +195,35 @@ public class OCIDataStore {
                 return;
             }
         }
+        List <String> layerDigests = new ArrayList<>();
         for (JsonNode layer : layers) {
             System.out.println("Layer: " + layer);
 
             try {
                 if (!isBlobInDatabase(layer.get("digest").asText())) {
-                    api.fetchBlob(layer.get("digest").asText(), layerpath, true);
+                    api.fetchBlob(layer.get("digest").asText(), layerpath, true, null);
                     addBlobToDatabase(layer.get("digest").asText());
+                    layerDigests.add(layer.get("digest").asText());
                 } else {
                     System.out.println("Blob already in database: " + layer.get("digest").asText());
                 }
-                digests.add(layer.get("digest").asText());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         try {
-            api.fetchBlob(manifest.get("config").get("digest").asText(), this.path+"/"+image+"/"+tag, false);
-            File config = new File(this.path+"/"+image+"/"+tag+manifest.get("config").get("digest").asText().replace("sha256:", ""));
-            config.renameTo(new File(this.path+"/"+image+"/"+tag+"/config"));
+            Files.write(Path.of(this.path+"/"+image+"/"+tag+"/layers"), layerDigests);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        FileWriter writer = null;
         try {
-            writer = new FileWriter(this.path+"/"+image+"/"+tag+"/layers");
-            writer.write(String.join("\n", digests));
-            writer.close();
+            api.fetchBlob(manifest.get("config").get("digest").asText(), this.path+"/"+image+"/"+tag, false, this.path+"/"+image+"/"+tag+"/config");
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
+
     }
 
     public String getPath() {

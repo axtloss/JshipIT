@@ -6,6 +6,8 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class BlobDownloader extends Thread {
 
@@ -14,13 +16,15 @@ public class BlobDownloader extends Thread {
     private final String[][] headers;
     private final String tmpdir;
     private final boolean extract;
+    private final String renameTo;
 
-    public BlobDownloader(String url, String digest, String[][] headers, String tmpdir, boolean extract) {
+    public BlobDownloader(String url, String digest, String[][] headers, String tmpdir, boolean extract, String renameTo) {
         this.url = url;
         this.digest = digest;
         this.headers = headers;
         this.tmpdir = tmpdir;
         this.extract = extract;
+        this.renameTo = renameTo;
     }
 
     public void run() {
@@ -75,13 +79,26 @@ public class BlobDownloader extends Thread {
             e.printStackTrace();
         }
 
-        File extracted = new File(tmpdir + "/" + digest.replace("sha256:", ""));
-        if (extracted.exists()) {
-            extracted.delete();
+        if (this.renameTo == null) {
+            return;
+        }
+
+        Path rename = new File(renameTo).toPath();
+        Path current = new File(tmpdir + "/" + digest.replace("sha256:", "")+".tar.gz").toPath();
+        try {
+            Files.move(current, rename);
+        } catch (IOException e) {
+            System.out.println("Failed to rename file "+digest);
+            e.printStackTrace();
         }
 
         if (!extract) {
             return;
+        }
+
+        File extracted = new File(tmpdir + "/" + digest.replace("sha256:", ""));
+        if (extracted.exists()) {
+            extracted.delete();
         }
         TarManager tarManager = new TarManager();
         try {

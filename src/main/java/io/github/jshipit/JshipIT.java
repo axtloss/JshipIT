@@ -43,6 +43,9 @@ public class JshipIT {
          */
 
         OCIDataStore dataStore = new OCIDataStore("./tmp");
-        dataStore.createImage("registry.docker.io","library", "bash", "devel-alpine3.18");
+        //dataStore.createImage("registry.docker.io","library", "bash", "devel-alpine3.18");
+        ContainerManager containerManager = new ContainerManager("testContainer", "bash", "devel-alpine3.18", "bash", "registry.docker.io", "library", dataStore);
+        containerManager.createContainer();
+        containerManager.startContainer();
     }
 }
