@@ -138,10 +138,10 @@ public class DockerAPIHelper {
         }
     }
 
-    public void fetchBlob(String digest, String tmpdir) throws IOException, RuntimeException {
+    public void fetchBlob(String digest, String tmpdir, boolean extract) throws IOException, RuntimeException {
         String url = "https://" + this.apiRepo + "/v2/" + this.repository + "/" + this.image + "/blobs/"+digest;
         String[][] headers = {{"Authorization", "Bearer "+this.apiToken}, {"Accept", "application/vnd/docker.distribution.manifest.v2+json"}};
-        BlobDownloader downloader = new BlobDownloader(url, digest, headers, tmpdir);
+        BlobDownloader downloader = new BlobDownloader(url, digest, headers, tmpdir, extract);
         downloader.start();
     }
 

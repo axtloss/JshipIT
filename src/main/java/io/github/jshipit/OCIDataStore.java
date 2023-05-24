@@ -2,6 +2,7 @@ package io.github.jshipit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -37,7 +38,6 @@ public class OCIDataStore {
             if (!(e instanceof FileAlreadyExistsException)) {
                 System.out.println("Failed to create directory: " + path);
                 e.printStackTrace();
-                return;
             }
         }
     }
@@ -52,6 +52,7 @@ public class OCIDataStore {
                 statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
                 statement.executeUpdate("CREATE TABLE IF NOT EXISTS blobs (id INTEGER PRIMARY KEY AUTOINCREMENT, digest TEXT, path TEXT)");
+                statement.executeUpdate("CREATE TABLE IF NOT EXISTS containers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, id TEXT, path TEXT)");
                 System.out.println("A new database has been created.");
             }
 
@@ -92,6 +93,35 @@ public class OCIDataStore {
             System.out.println(e.getMessage());
         }
         return false;
+    }
+
+    public void addContainerToDatabase(String path, String name, String id) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                statement.executeUpdate("INSERT INTO containers (name, id, path) VALUES ('" + name + "', '" + id + "', '" + path + "')");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public String createContainerDirectory(String image, String tag, String name, String id) {
+        Path containerPath = Path.of(this.path+"/"+image+"/"+tag+"/"+name+"_"+id);
+        try {
+            Files.createDirectory(containerPath);
+        } catch (IOException e) {
+            System.out.println("Failed to create directory: " + containerPath);
+            e.printStackTrace();
+            return null;
+        }
+        addContainerToDatabase(containerPath.toString(), name, id);
+        return containerPath.toString();
     }
 
     public void createImage(String apiRepo, String repo, String image, String tag) {
@@ -153,7 +183,7 @@ public class OCIDataStore {
 
             try {
                 if (!isBlobInDatabase(layer.get("digest").asText())) {
-                    api.fetchBlob(layer.get("digest").asText(), layerpath);
+                    api.fetchBlob(layer.get("digest").asText(), layerpath, true);
                     addBlobToDatabase(layer.get("digest").asText());
                 } else {
                     System.out.println("Blob already in database: " + layer.get("digest").asText());
@@ -162,6 +192,14 @@ public class OCIDataStore {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        try {
+            api.fetchBlob(manifest.get("config").get("digest").asText(), this.path+"/"+image+"/"+tag, false);
+            File config = new File(this.path+"/"+image+"/"+tag+manifest.get("config").get("digest").asText().replace("sha256:", ""));
+            config.renameTo(new File(this.path+"/"+image+"/"+tag+"/config"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         FileWriter writer = null;
@@ -174,4 +212,19 @@ public class OCIDataStore {
         }
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getDatabasePath() {
+        return databasePath;
+    }
+
+    public void setDatabasePath(String databasePath) {
+        this.databasePath = databasePath;
+    }
 }
