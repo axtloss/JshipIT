@@ -1,12 +1,7 @@
 package io.github.jshipit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,26 +41,13 @@ public class ContainerManager {
 
         String containerDirectory = dataStore.createContainerDirectory(this.containerImage, this.containerTag, this.containerName, this.containerID);
 
-        System.out.println("Container directory: " + containerDirectory);
-        System.out.println("Container ID: " + this.containerID);
-
         new File(containerDirectory + "/containerOverlay").mkdirs();
         new File(containerDirectory + "/root").mkdirs();
     }
 
     public void startContainer() {
-        System.out.println("Starting container");
-        System.out.println("Container ID: " + this.containerID);
-        System.out.println("Container name: " + this.containerName);
-        System.out.println("Container image: " + this.containerImage);
-        System.out.println("Container tag: " + this.containerTag);
-        System.out.println("Container entry command: " + this.entryCommand);
-        System.out.println("Container data store: " + this.dataStore.getPath());
-
 
         String containerDirectory = dataStore.getContainerPath(this.containerName, this.containerID);
-        System.out.println("Container directory: " + containerDirectory);
-
         List<String> content = null;
         try {
             content = Files.readAllLines(Paths.get(this.dataStore.getPath() + "/" + this.containerImage + "/" + this.containerTag + "/layers"));
@@ -86,7 +68,6 @@ public class ContainerManager {
     }
 
     public String genContainerID() {
-        System.out.println("Generating container ID");
         return UUID.randomUUID().toString();
     }
 }

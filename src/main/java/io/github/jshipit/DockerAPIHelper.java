@@ -43,7 +43,6 @@ public class DockerAPIHelper {
         URL url_obj = null;
         try {
             url_obj = new URI("https://"+this.apiRepo+"/v2/").toURL();
-            System.out.println(url_obj);
         } catch (URISyntaxException | MalformedURLException e) {
             e.printStackTrace();
         }
@@ -71,7 +70,6 @@ public class DockerAPIHelper {
         URL url_obj = null;
         try {
             url_obj = new URI(this.authURL + "?scope=repository:" + this.repository + "/" + this.image + ":pull"  + "&service=" + this.authService).toURL();
-            System.out.println(url_obj);
         } catch (URISyntaxException | MalformedURLException e) {
             System.out.println("URISyntaxException | MalformedURLException");
             e.printStackTrace();
@@ -87,17 +85,14 @@ public class DockerAPIHelper {
             throw new RuntimeException("Failed : HTTP error code : "
                     + con.getResponseCode());
         } else {
-            System.out.println("Success: " + con.getResponseCode());
             StringBuilder output = new StringBuilder();
             Scanner scanner = new Scanner(url_obj.openStream());
             while (scanner.hasNext()) {
                 output.append(scanner.nextLine());
             }
             scanner.close();
-            System.out.println(output);
             ObjectMapper mapper = new ObjectMapper();
             JsonNode token = mapper.readTree(output.toString());
-            System.out.println(token.get("token").asText());
             return token.get("token").asText();
         }
     }
@@ -106,7 +101,6 @@ public class DockerAPIHelper {
         URL url_obj = null;
         try {
             url_obj = new URI("https://" + this.apiRepo + "/v2/" + this.repository + "/" + this.image + "/manifests/"+this.tag).toURL();
-            System.out.println(url_obj);
         } catch(URISyntaxException | MalformedURLException e) {
             System.out.println("URISyntaxException | MalformedURLException");
             e.printStackTrace();
@@ -124,7 +118,6 @@ public class DockerAPIHelper {
             throw new RuntimeException("Failed : HTTP error code : "
                     + con.getResponseCode());
         } else {
-            System.out.println("Success: " + con.getResponseCode());
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
             StringBuilder content = new StringBuilder();

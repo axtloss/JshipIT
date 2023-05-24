@@ -53,7 +53,6 @@ public class BlobDownloader extends Thread {
                 throw new RuntimeException("Failed : HTTP error code : "
                         + con.getResponseCode());
             } else {
-                System.out.println("Success: " + con.getResponseCode());
             }
         } catch (IOException e) {
             System.out.println("Failed to connect");
@@ -79,17 +78,18 @@ public class BlobDownloader extends Thread {
             e.printStackTrace();
         }
 
-        if (this.renameTo == null) {
+        if (this.renameTo == null && !extract) {
             return;
-        }
-
-        Path rename = new File(renameTo).toPath();
-        Path current = new File(tmpdir + "/" + digest.replace("sha256:", "")+".tar.gz").toPath();
-        try {
-            Files.move(current, rename);
-        } catch (IOException e) {
-            System.out.println("Failed to rename file "+digest);
-            e.printStackTrace();
+        } else if (this.renameTo != null) {
+            Path rename = new File(renameTo).toPath();
+            Path current = new File(tmpdir + "/" + digest.replace("sha256:", "")+".tar.gz").toPath();
+            try {
+                Files.move(current, rename);
+            } catch (IOException e) {
+                System.out.println("Failed to rename file "+digest);
+                e.printStackTrace();
+            }
+            return;
         }
 
         if (!extract) {

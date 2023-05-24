@@ -20,13 +20,16 @@ public class OCIDataStore {
     public OCIDataStore(String path) {
         this.path = path;
         this.databasePath = path + "/datastore.db";
-        createStore();
-        try {
-            createStoreDatabase();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+        if (!Files.isDirectory(Path.of(path))) {
+            createStore();
         }
-
+        if (!Files.exists(Path.of(this.databasePath))) {
+            try {
+                createStoreDatabase();
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private void createStore() {
@@ -162,15 +165,11 @@ public class OCIDataStore {
 
         DockerAPIHelper api = new DockerAPIHelper(apiRepo, repo, image, tag);
 
-        System.out.println("API Token: " + api.getApiToken());
-
         JsonNode manifest = null;
 
         try {
             manifest = api.fetchManifestJson();
         } catch (IOException ignored) {} // Proper error handling is bloat
-
-        System.out.println("Manifest: " + manifest);
 
         Path path = Path.of(this.path+"/"+api.getImage()+"/"+api.getTag());
         try {
@@ -197,8 +196,6 @@ public class OCIDataStore {
         }
         List <String> layerDigests = new ArrayList<>();
         for (JsonNode layer : layers) {
-            System.out.println("Layer: " + layer);
-
             try {
                 if (!isBlobInDatabase(layer.get("digest").asText())) {
                     api.fetchBlob(layer.get("digest").asText(), layerpath, true, null);
