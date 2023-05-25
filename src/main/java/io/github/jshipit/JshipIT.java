@@ -11,6 +11,7 @@ import com.beust.jcommander.Parameter;
 public class JshipIT {
 
     public JshipIT(String[] args) {
+        CommandShell commandShell = new CommandShell();
         CommandStart commandStart = new CommandStart();
         CommandCreate commandCreate = new CommandCreate();
         CommandPull commandPull = new CommandPull();
@@ -18,6 +19,7 @@ public class JshipIT {
                 .addCommand("create", commandCreate)
                 .addCommand("pull", commandPull)
                 .addCommand("start", commandStart)
+                .addCommand("shell", commandShell)
                 .build();
 
         commands.parse(args);
@@ -33,8 +35,11 @@ public class JshipIT {
         } else if (commands.getParsedCommand().equals("pull")) {
             dataStore.createImage(commandPull.containerApiRepo, commandPull.containerRepo, commandPull.containerImage, commandPull.containerTag);
         } else if (commands.getParsedCommand().equals("start")) {
-            ContainerManager containerManager = new ContainerManager(commandStart.containerName, dataStore);
-            containerManager.runCommand(null);
+            ContainerManager containerManager = new ContainerManager(commandStart.containerName, commandStart.containerCommand, dataStore);
+            containerManager.runCommand();
+        } else if (commands.getParsedCommand().equals("shell")) {
+            ContainerManager containerManager = new ContainerManager(commandShell.containerName, "/bin/sh", dataStore); // A proper linux system should always have /bin/sh, skill issue if it doesn't
+            containerManager.runCommand();
         }
 
 

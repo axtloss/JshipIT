@@ -17,6 +17,8 @@ public class ContainerManager {
     private String containerImage;
     private String containerTag;
     private String containerApiRepo;
+
+    private String containerCommand;
     private OCIDataStore dataStore;
 
     public ContainerManager(String containerName, String containerImage, String containerTag, String containerApiRepo, String containerRepo, OCIDataStore dataStore) {
@@ -28,12 +30,13 @@ public class ContainerManager {
         this.dataStore = dataStore;
     }
 
-    public ContainerManager(String containerName, OCIDataStore dataStore) {
+    public ContainerManager(String containerName, String containerCommand, OCIDataStore dataStore) {
         this.containerName = containerName;
         this.containerImage = dataStore.getContainerImage(containerName);
         this.containerTag = dataStore.getContainerTag(containerName);
         this.containerApiRepo = dataStore.getContainerApiRepo(containerName);
         this.containerRepo = dataStore.getContainerRepo(containerName);
+        this.containerCommand = containerCommand;
         this.dataStore = dataStore;
     }
 
@@ -74,7 +77,7 @@ public class ContainerManager {
 
     }
 
-    public void runCommand(String command) {
+    public void runCommand() {
         String containerDirectory = dataStore.getContainerPath(this.containerName);
         String dataStorePath = dataStore.getPath();
 
@@ -114,12 +117,12 @@ public class ContainerManager {
         bwrapCommand.add("--ro-bind "+containerDirectory+"/root / --chdir /");
         bwrapCommand.add("--share-net");
         bwrapCommand.add("--unshare-uts --hostname "+ (!hostname.isBlank() ? hostname : this.containerName+"-"+this.containerImage));
-        bwrapCommand.add("/bin/sh -c "+cmd);
+        bwrapCommand.add("/bin/sh -c '"+(this.containerCommand != null ? this.containerCommand : cmd)+"'");
         SysUtils sysUtils = new SysUtils();
         String bwrapCMD = sysUtils.execInBwrap(bwrapCommand.toArray(new String[0]), false);
         String mountCMD = startContainer(true);
 
-        String CMD = "unshare --user --map-root-user --mount bash -c \""+mountCMD+";"+bwrapCMD+";"+command+"\""; // I am starting to realize that this project was not a good idea
+        String CMD = "unshare --user --map-root-user --mount bash -c \""+mountCMD+";"+bwrapCMD+"\""; // I am starting to realize that this project was not a good idea
         ProcessBuilder pb = new ProcessBuilder("bash", "-c", CMD);
         pb.inheritIO();
         try {
