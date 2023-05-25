@@ -98,13 +98,8 @@ public class BlobDownloader extends Thread {
         if (extracted.exists()) {
             extracted.delete();
         }
-        TarManager tarManager = new TarManager();
-        try {
-            tarManager.untar(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz", extracted);
-        } catch (IOException e) {
-            System.out.println("Failed to extract blob "+digest);
-            e.printStackTrace();
-        }
+        SysUtils tarManager = new SysUtils();
+        tarManager.untar(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz", tmpdir + "/" + digest.replace("sha256:", ""));
         File tar = new File(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz");
         if (tar.exists()) {
             tar.delete();
