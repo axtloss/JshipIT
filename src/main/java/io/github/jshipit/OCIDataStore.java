@@ -55,7 +55,7 @@ public class OCIDataStore {
                 statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
                 statement.executeUpdate("CREATE TABLE IF NOT EXISTS blobs (id INTEGER PRIMARY KEY AUTOINCREMENT, digest TEXT, path TEXT)");
-                statement.executeUpdate("CREATE TABLE IF NOT EXISTS containers (containerID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, id TEXT, path TEXT)");
+                statement.executeUpdate("CREATE TABLE IF NOT EXISTS containers (containerID INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, path TEXT, image TEXT, tag TEXT, apiRepo TEXT, repo TEXT)");
                 System.out.println("A new database has been created.");
             }
 
@@ -98,7 +98,7 @@ public class OCIDataStore {
         return false;
     }
 
-    public void addContainerToDatabase(String path, String name, String id) {
+    public void addContainerToDatabase(String path, String name, String image, String tag, String apiRepo, String repo) {
         String url = "jdbc:sqlite:" + this.databasePath;
 
         try (Connection conn = DriverManager.getConnection(url)) {
@@ -106,7 +106,7 @@ public class OCIDataStore {
                 Statement statement = conn.createStatement();
                 statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-                statement.executeUpdate("INSERT INTO containers (name, id, path) VALUES ('" + name + "', '" + id + "', '" + path + "')");
+                statement.executeUpdate("INSERT INTO containers (name, path, image, tag, apiRepo, repo) VALUES ('" + name + "', '" + path + "', '" + image + "', '" + tag + "', '" + apiRepo + "', '" + repo + "')");
             }
 
         } catch (SQLException e) {
@@ -114,7 +114,7 @@ public class OCIDataStore {
         }
     }
 
-    public String getContainerPath(String name, String id) {
+    public String getContainerID(String name) {
         String url = "jdbc:sqlite:" + this.databasePath;
 
         try (Connection conn = DriverManager.getConnection(url)) {
@@ -122,7 +122,25 @@ public class OCIDataStore {
                 Statement statement = conn.createStatement();
                 statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "' AND id = '" + id + "'");
+                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "'");
+                return rs.getString("containerID");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public String getContainerPath(String name) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "'");
                 return rs.getString("path");
             }
 
@@ -132,8 +150,80 @@ public class OCIDataStore {
         return null;
     }
 
-    public String createContainerDirectory(String image, String tag, String name, String id) {
-        Path containerPath = Path.of(this.path+"/"+image+"/"+tag+"/"+name+"_"+id);
+    public String getContainerImage(String name) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "'");
+                return rs.getString("image");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public String getContainerTag(String name) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "'");
+                return rs.getString("tag");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public String getContainerApiRepo(String name) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "'");
+                return rs.getString("apiRepo");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public String getContainerRepo(String name) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "'");
+                return rs.getString("repo");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public String createContainerDirectory(String image, String tag, String name, String apiRepo, String repo) {
+        Path containerPath = Path.of(this.path+"/"+image+"/"+tag+"/"+name);
         try {
             Files.createDirectory(containerPath);
         } catch (IOException e) {
@@ -141,7 +231,7 @@ public class OCIDataStore {
             e.printStackTrace();
             return null;
         }
-        addContainerToDatabase(containerPath.toString(), name, id);
+        addContainerToDatabase(containerPath.toString(), name, image, tag, apiRepo, repo);
         return containerPath.toString();
     }
 

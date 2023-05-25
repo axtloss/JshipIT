@@ -29,6 +29,18 @@ public class SysUtils {
         }
     }
 
+    public void execInBwrap(String[] args) {
+        //System.out.println("bwrap "+String.join(" ", args));
+        ProcessBuilder pb = new ProcessBuilder("bwrap", args.toString());
+        pb.inheritIO();
+        try {
+            Process p = pb.start();
+            p.waitFor();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void overlayMount(String[] lower, String upper, String target, String work) {
         if (Platform.isLinux()) {
 

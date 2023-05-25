@@ -3,6 +3,12 @@ package io.github.jshipit;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
+@Parameters(commandDescription = "Start a container")
+class CommandStart {
+    @Parameter(names = {"--name", "-n"}, description = "Name of the container")
+    public String containerName;
+}
+
 @Parameters(commandDescription = "Create a container")
 class CommandCreate {
     @Parameter(names = {"--name", "-n"}, description = "Name of the container")
