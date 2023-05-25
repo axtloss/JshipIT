@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class ContainerManager {
     private String containerName;
@@ -42,6 +41,11 @@ public class ContainerManager {
 
     public void createContainer() {
         System.out.println("Creating container");
+
+        if (dataStore.containerExists(this.containerName)) {
+            System.out.println("Container already exists");
+            return;
+        }
 
         if (!Files.isDirectory(Paths.get(dataStore.getPath() + "/" + this.containerImage + "/" + this.containerTag))) {
             System.out.println("Image does not exist");
@@ -114,7 +118,7 @@ public class ContainerManager {
             bwrapCommand.add("--setenv "+envVar.split("=")[0]+" "+envVar.split("=")[1]);
         }
 
-        bwrapCommand.add("--ro-bind "+containerDirectory+"/root / --chdir /");
+        bwrapCommand.add("--bind "+containerDirectory+"/root / --chdir /");
         bwrapCommand.add("--share-net");
         bwrapCommand.add("--unshare-uts --hostname "+ (!hostname.isBlank() ? hostname : this.containerName+"-"+this.containerImage));
         bwrapCommand.add("/bin/sh -c '"+(this.containerCommand != null ? this.containerCommand : cmd)+"'");
@@ -133,7 +137,16 @@ public class ContainerManager {
         }
     }
 
-    public String genContainerID() {
-        return UUID.randomUUID().toString();
+    public void deleteContainer() {
+        String containerDirectory = dataStore.getContainerPath(this.containerName);
+        try {
+            Files.delete(Paths.get(containerDirectory + "/containerOverlay"));
+            Files.delete(Paths.get(containerDirectory + "/root"));
+            Files.delete(Paths.get(containerDirectory + "/work"));
+            Files.delete(Paths.get(containerDirectory));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        dataStore.deleteContainerFromDatabase(this.containerName);
     }
 }

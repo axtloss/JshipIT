@@ -6,16 +6,6 @@ import java.io.File;
 
 public class SysUtils {
 
-    public void chmod(String path, int mode) {
-        ProcessBuilder pb = new ProcessBuilder("chmod", Integer.toString(mode), path);
-        pb.inheritIO();
-        try {
-            Process p = pb.start();
-            p.waitFor();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public void untar(String in, String out) {
         new File(out).mkdirs();
@@ -30,7 +20,6 @@ public class SysUtils {
     }
 
     public String execInBwrap(String[] args, boolean execute) {
-        //System.out.println("bwrap "+String.join(" ", args));
         if (!execute) {
             return "bwrap "+String.join(" ", args);
         }

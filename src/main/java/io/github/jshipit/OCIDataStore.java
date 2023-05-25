@@ -2,8 +2,6 @@ package io.github.jshipit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -114,7 +112,23 @@ public class OCIDataStore {
         }
     }
 
-    public String getContainerID(String name) {
+    public void deleteContainerFromDatabase(String name) {
+        String url = "jdbc:sqlite:" + this.databasePath;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                Statement statement = conn.createStatement();
+                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+                statement.executeUpdate("DELETE FROM containers WHERE name = '" + name + "'");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public boolean containerExists(String name) {
         String url = "jdbc:sqlite:" + this.databasePath;
 
         try (Connection conn = DriverManager.getConnection(url)) {
@@ -123,13 +137,13 @@ public class OCIDataStore {
                 statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
                 ResultSet rs = statement.executeQuery("SELECT * FROM containers WHERE name = '" + name + "'");
-                return rs.getString("containerID");
+                return rs.next();
             }
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        return null;
+        return false;
     }
 
     public String getContainerPath(String name) {
