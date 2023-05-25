@@ -38,6 +38,9 @@ public class DockerAPIHelper {
         }
     }
 
+    /*
+     * Get the Authentication URL from the registry
+     */
     public void getAuthenticationUrl() throws IOException {
         URL url_obj = null;
         try {
@@ -60,11 +63,16 @@ public class DockerAPIHelper {
             this.authURL = authenticate.get(0).replace("Bearer realm=", "").replace("\"", "").split(",")[0];
             this.authService = authenticate.get(0).replace("service=", "").replace("\"", "").split(",")[1];
         } else {
-            this.authURL = "https://auth.docker.io/token";
+            this.authURL = "https://auth.docker.io/token"; // Just default to docker if the registry does not support or need authentication
             this.authService = "registry.docker.io";
         }
     }
 
+    /*
+     * Generate an API token from the authentication URL
+     *
+     * @return String API token
+     */
     public String generateAPIToken() throws IOException, RuntimeException {
         URL url_obj = null;
         try {
@@ -96,6 +104,11 @@ public class DockerAPIHelper {
         }
     }
 
+    /*
+     * Fetch the manifest JSON from the registry
+     *
+     * @return JsonNode Manifest JSON
+     */
     public JsonNode fetchManifestJson() throws IOException, RuntimeException {
         URL url_obj = null;
         try {
@@ -130,15 +143,19 @@ public class DockerAPIHelper {
         }
     }
 
+    /*
+     * Fetch a blob from a specific image
+     *
+     * @param digest Digest of the blob to fetch
+     * @param tmpdir Directory to store the blob
+     * @param extract Whether or not to extract the blob
+     * @param renameTo Rename the blob to this name
+     */
     public void fetchBlob(String digest, String tmpdir, boolean extract, String renameTo) throws IOException, RuntimeException {
         String url = "https://" + this.apiRepo + "/v2/" + this.repository + "/" + this.image + "/blobs/"+digest;
         String[][] headers = {{"Authorization", "Bearer "+this.apiToken}, {"Accept", "application/vnd/docker.distribution.manifest.v2+json"}};
         BlobDownloader downloader = new BlobDownloader(url, digest, headers, tmpdir, extract, renameTo);
         downloader.start();
-    }
-
-    public String getApiToken() {
-        return apiToken;
     }
 
     public String getImage() {

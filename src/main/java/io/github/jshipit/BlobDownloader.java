@@ -1,8 +1,6 @@
 package io.github.jshipit;
 
 import me.tongfei.progressbar.ProgressBar;
-import org.apache.commons.compress.archivers.tar.*;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import java.io.*;
 import java.net.*;
@@ -27,6 +25,9 @@ public class BlobDownloader extends Thread {
         this.renameTo = renameTo;
     }
 
+    /*
+     * Download a blob
+     */
     public void run() {
         URL url_obj = null;
         try {
@@ -59,12 +60,12 @@ public class BlobDownloader extends Thread {
         }
 
 
-        int fileSize = con.getContentLength();
+        int fileSize = con.getContentLength(); // We get the file size to display a progress bar
 
         try (InputStream in = con.getInputStream();
              OutputStream out = new FileOutputStream(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz")) {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
+            byte[] buffer = new byte[4096]; // Always read in chunks of 4096 bytes
+            int bytesRead; // How many bytes were read, used to update the progress bar
             try (ProgressBar pb = new ProgressBar("Download blob "+digest.replace("sha256:", ""), fileSize)) {
                 while ((bytesRead = in.read(buffer)) != -1) {
                     out.write(buffer, 0, bytesRead);
@@ -90,19 +91,22 @@ public class BlobDownloader extends Thread {
             return;
         }
 
-        if (!extract) {
-            return;
-        }
 
-        File extracted = new File(tmpdir + "/" + digest.replace("sha256:", ""));
-        if (extracted.exists()) {
-            extracted.delete();
-        }
-        SysUtils tarManager = new SysUtils();
-        tarManager.untar(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz", tmpdir + "/" + digest.replace("sha256:", ""));
-        File tar = new File(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz");
-        if (tar.exists()) {
-            tar.delete();
+        if (extract) {
+
+            File extracted = new File(tmpdir + "/" + digest.replace("sha256:", ""));
+            if (extracted.exists()) {
+                extracted.delete();
+            }
+            SysUtils tarManager = new SysUtils();
+
+            // Extract the downloaded tar.gz
+            tarManager.untar(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz", tmpdir + "/" + digest.replace("sha256:", ""));
+
+            File tar = new File(tmpdir + "/" + digest.replace("sha256:", "") + ".tar.gz");
+            if (tar.exists()) {
+                tar.delete();
+            }
         }
     }
 }

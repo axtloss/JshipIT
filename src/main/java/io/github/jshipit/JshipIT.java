@@ -35,6 +35,8 @@ public class JshipIT {
                 System.out.println("Container name is required");
                 System.exit(1);
             }
+
+            // Parse the image name into the registry, repo, image name and tag
             List<String> image = new ArrayList<String>(Arrays.asList(commandCreate.containerImage.split("/")));
             String containerImage = image.get(image.size() - 1).split(":")[0];
             String apiRepo = image.get(0);
@@ -42,25 +44,16 @@ public class JshipIT {
             image.remove(image.size() - 1);
             String containerRepo = String.join("/", image);
 
-            switch (apiRepo) {
-                case "docker.io":
-                    apiRepo = "registry.docker.io";
-                    break;
-                case "ghcr.io":
-                    apiRepo = "ghcr.io";
-                    break;
-                case "quay.io":
-                    apiRepo = "quay.io";
-                    break;
-                default:
-                    break;
+            // Convert the registry name to the OCI registry name
+            if (apiRepo == "docker.io") {
+                apiRepo = "registry.docker.io";
             }
-
 
             ContainerManager containerManager = new ContainerManager(commandCreate.containerName, containerImage, commandCreate.containerImage.split(":")[1], apiRepo, containerRepo, dataStore);
             containerManager.createContainer();
         } else if (commands.getParsedCommand().equals("pull")) {
 
+            // Parse the image name into the registry, repo, image name and tag
             List<String> image = new ArrayList<String>(Arrays.asList(commandPull.containerImage.split("/")));
             String containerImage = image.get(image.size() - 1).split(":")[0];
             String apiRepo = image.get(0);
@@ -68,19 +61,11 @@ public class JshipIT {
             image.remove(image.size() - 1);
             String containerRepo = String.join("/", image);
 
-            switch (apiRepo) {
-                case "docker.io":
-                    apiRepo = "registry.docker.io";
-                    break;
-                case "ghcr.io":
-                    apiRepo = "ghcr.io";
-                    break;
-                case "quay.io":
-                    apiRepo = "quay.io";
-                    break;
-                default:
-                    break;
+            // Convert the registry name to the OCI registry name
+            if (apiRepo == "docker.io") {
+                apiRepo = "registry.docker.io";
             }
+
             System.out.println("Pulling image " + containerImage + " from " + apiRepo + "/" + containerRepo);
             dataStore.createImage(apiRepo, containerRepo, containerImage, commandPull.containerImage.split(":")[1]);
         } else if (commands.getParsedCommand().equals("start")) {

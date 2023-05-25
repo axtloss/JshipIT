@@ -7,3 +7,4 @@ supported/planned features:
 - `jshipit run` - run a command in a container
 - `jshipit shell` - open a shell in a container
 - `jshipit create` - create a container
+- `jshipit delete` - delete a container
