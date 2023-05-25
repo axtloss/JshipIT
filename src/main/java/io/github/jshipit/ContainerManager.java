@@ -52,7 +52,7 @@ public class ContainerManager {
         new File(containerDirectory+"/work").mkdirs();
     }
 
-    public void startContainer() {
+    public String startContainer(boolean getCommand) {
 
         String containerDirectory = dataStore.getContainerPath(this.containerName);
         List<String> content = null;
@@ -70,14 +70,13 @@ public class ContainerManager {
 
         SysUtils sysUtils = new SysUtils();
         String[] diffs = layers.toArray(new String[0]);
-        sysUtils.overlayMount(diffs, containerDirectory + "/containerOverlay", containerDirectory + "/root", containerDirectory + "/work");
+        return sysUtils.overlayMount(diffs, containerDirectory + "/containerOverlay", containerDirectory + "/root", containerDirectory + "/work", !getCommand);
 
     }
 
     public void runCommand(String command) {
         String containerDirectory = dataStore.getContainerPath(this.containerName);
         String dataStorePath = dataStore.getPath();
-        startContainer();
 
         File configPath = new File(dataStorePath + "/" + this.containerImage + "/" + this.containerTag + "/config");
         String content = null;
@@ -114,10 +113,21 @@ public class ContainerManager {
 
         bwrapCommand.add("--ro-bind "+containerDirectory+"/root / --chdir /");
         bwrapCommand.add("--share-net");
-        bwrapCommand.add("--hostname "+ (!hostname.isBlank() ? hostname : this.containerName+"-"+this.containerImage));
-        bwrapCommand.add(cmd);
+        bwrapCommand.add("--unshare-uts --hostname "+ (!hostname.isBlank() ? hostname : this.containerName+"-"+this.containerImage));
+        bwrapCommand.add("/bin/sh -c "+cmd);
         SysUtils sysUtils = new SysUtils();
-        sysUtils.execInBwrap(bwrapCommand.toArray(new String[0]));
+        String bwrapCMD = sysUtils.execInBwrap(bwrapCommand.toArray(new String[0]), false);
+        String mountCMD = startContainer(true);
+
+        String CMD = "unshare --user --map-root-user --mount bash -c \""+mountCMD+";"+bwrapCMD+";"+command+"\""; // I am starting to realize that this project was not a good idea
+        ProcessBuilder pb = new ProcessBuilder("bash", "-c", CMD);
+        pb.inheritIO();
+        try {
+            Process p = pb.start();
+            p.waitFor();
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String genContainerID() {

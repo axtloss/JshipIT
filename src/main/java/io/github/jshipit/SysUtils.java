@@ -29,9 +29,12 @@ public class SysUtils {
         }
     }
 
-    public void execInBwrap(String[] args) {
+    public String execInBwrap(String[] args, boolean execute) {
         //System.out.println("bwrap "+String.join(" ", args));
-        ProcessBuilder pb = new ProcessBuilder("bwrap", args.toString());
+        if (!execute) {
+            return "bwrap "+String.join(" ", args);
+        }
+        ProcessBuilder pb = new ProcessBuilder("bash", "-c", "bwrap "+String.join(" ", args));
         pb.inheritIO();
         try {
             Process p = pb.start();
@@ -39,9 +42,13 @@ public class SysUtils {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return "";
     }
 
-    public void overlayMount(String[] lower, String upper, String target, String work) {
+    public String overlayMount(String[] lower, String upper, String target, String work, boolean execute) {
+        if (!execute) {
+            return "mount -t overlay overlay -o lowerdir="+String.join(":", lower)+",upperdir="+upper+",workdir="+work+" "+target;
+        }
         if (Platform.isLinux()) {
 
             ProcessBuilder pb = new ProcessBuilder("unshare", "--user", "--map-root-user", "--mount", "mount", "-t", "overlay", "overlay", "-o", "lowerdir="+String.join(":", lower)+",upperdir="+upper+",workdir="+work, target);
@@ -57,5 +64,6 @@ public class SysUtils {
             System.out.println("Platform not supported.");
             System.out.println("mount -t overlay overlay -o lowerdir="+String.join(":", lower)+",upperdir="+upper+",workdir="+work+" "+target);
         }
+        return "";
     }
 }

@@ -34,7 +34,6 @@ public class JshipIT {
             dataStore.createImage(commandPull.containerApiRepo, commandPull.containerRepo, commandPull.containerImage, commandPull.containerTag);
         } else if (commands.getParsedCommand().equals("start")) {
             ContainerManager containerManager = new ContainerManager(commandStart.containerName, dataStore);
-            containerManager.startContainer();
             containerManager.runCommand(null);
         }
 
