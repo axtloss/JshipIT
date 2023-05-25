@@ -43,6 +43,7 @@ public class ContainerManager {
 
         new File(containerDirectory + "/containerOverlay").mkdirs();
         new File(containerDirectory + "/root").mkdirs();
+        new File(containerDirectory+"/work").mkdirs();
     }
 
     public void startContainer() {
@@ -61,9 +62,9 @@ public class ContainerManager {
         }
         assert layers.size() > 0;
 
-        Mount mount = new Mount();
+        SysUtils sysUtils = new SysUtils();
         String[] diffs = layers.toArray(new String[0]);
-        mount.overlayMount(diffs, containerDirectory + "/containerOverlay", containerDirectory + "/root");
+        sysUtils.overlayMount(diffs, containerDirectory + "/containerOverlay", containerDirectory + "/root", containerDirectory + "/work");
 
     }
 

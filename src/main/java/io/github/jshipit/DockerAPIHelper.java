@@ -21,7 +21,6 @@ public class DockerAPIHelper {
     private final String tag;
 
     public DockerAPIHelper(String apiRepo, String repository, String image, String tag) {
-        System.out.println("DockerAPIHelper constructor");
         if (apiRepo.contains("registry.docker.io")) {
             apiRepo = apiRepo.replace("registry", "registry-1"); // Docker is just funny like that
         }

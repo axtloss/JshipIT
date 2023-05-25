@@ -31,7 +31,6 @@ public class BlobDownloader extends Thread {
         URL url_obj = null;
         try {
             url_obj = new URI(this.url).toURL();
-            System.out.println(url_obj);
         } catch(URISyntaxException | MalformedURLException e) {
             System.out.println("URISyntaxException | MalformedURLException");
             e.printStackTrace();
@@ -52,7 +51,6 @@ public class BlobDownloader extends Thread {
                 System.out.println("Error: " + con.getResponseCode());
                 throw new RuntimeException("Failed : HTTP error code : "
                         + con.getResponseCode());
-            } else {
             }
         } catch (IOException e) {
             System.out.println("Failed to connect");

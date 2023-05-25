@@ -26,6 +26,7 @@ public class TarManager {
     }
 
     public void untar(String in, File out) throws IOException {
+        SysUtils chmod = new SysUtils();
         try (TarArchiveInputStream fin = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(in)))){
             TarArchiveEntry entry;
             while ((entry = fin.getNextTarEntry()) != null) {
@@ -37,6 +38,7 @@ public class TarManager {
                 if (!parent.exists()) {
                     parent.mkdirs();
                 }
+                chmod.chmod(curfile.getPath(), entry.getMode());
                 IOUtils.copy(fin, new FileOutputStream(curfile));
             }
         }
