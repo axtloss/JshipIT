@@ -25,7 +25,7 @@ public class JshipIT {
 
         commands.parse(args);
 
-        OCIDataStore dataStore = new OCIDataStore(System.getenv("HOME") + "/.local/share/dataStore");
+        OCIDataStore dataStore = new OCIDataStore(System.getenv("HOME") + "/.local/share/jshipit/dataStore");
 
         if (commands.getParsedCommand() == null) {
             commands.usage();
@@ -45,11 +45,11 @@ public class JshipIT {
             String containerRepo = String.join("/", image);
 
             // Convert the registry name to the OCI registry name
-            if (apiRepo == "docker.io") {
+            if (apiRepo.equalsIgnoreCase("docker.io")) {
                 apiRepo = "registry.docker.io";
             }
 
-            ContainerManager containerManager = new ContainerManager(commandCreate.containerName, containerImage, commandCreate.containerImage.split(":")[1], apiRepo, containerRepo, dataStore);
+            ContainerManager containerManager = new ContainerManager(commandCreate.containerName, containerImage, commandCreate.containerImage.split(":")[1], apiRepo, containerRepo, null, dataStore);
             containerManager.createContainer();
         } else if (commands.getParsedCommand().equals("pull")) {
 
@@ -62,20 +62,20 @@ public class JshipIT {
             String containerRepo = String.join("/", image);
 
             // Convert the registry name to the OCI registry name
-            if (apiRepo == "docker.io") {
+            if (apiRepo.equalsIgnoreCase("docker.io")) {
                 apiRepo = "registry.docker.io";
             }
 
             System.out.println("Pulling image " + containerImage + " from " + apiRepo + "/" + containerRepo);
             dataStore.createImage(apiRepo, containerRepo, containerImage, commandPull.containerImage.split(":")[1]);
         } else if (commands.getParsedCommand().equals("start")) {
-            ContainerManager containerManager = new ContainerManager(commandStart.containerName, commandStart.containerCommand, dataStore);
+            ContainerManager containerManager = new ContainerManager(commandStart.containerName, commandStart.containerCommand, commandStart.containerMount, dataStore);
             containerManager.runCommand();
         } else if (commands.getParsedCommand().equals("shell")) {
-            ContainerManager containerManager = new ContainerManager(commandShell.containerName, "/bin/sh", dataStore); // A proper linux system should always have /bin/sh, skill issue if it doesn't
+            ContainerManager containerManager = new ContainerManager(commandShell.containerName, "/bin/sh", commandShell.containerMount, dataStore); // A proper linux system should always have /bin/sh, skill issue if it doesn't
             containerManager.runCommand();
         } else if (commands.getParsedCommand().equals("delete")) {
-            ContainerManager containerManager = new ContainerManager(commandDelete.containerName, null, dataStore);
+            ContainerManager containerManager = new ContainerManager(commandDelete.containerName, null, null, dataStore);
             containerManager.deleteContainer();
         }
     }

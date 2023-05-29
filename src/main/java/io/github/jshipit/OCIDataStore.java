@@ -43,7 +43,7 @@ public class OCIDataStore {
         System.out.println("Creating OCI Data Store");
         Path path = Path.of(this.path);
         try {
-            Files.createDirectory(path);
+            Files.createDirectories(path);
         } catch (IOException e) {
             if (!(e instanceof FileAlreadyExistsException)) {
                 System.out.println("Failed to create directory: " + path);

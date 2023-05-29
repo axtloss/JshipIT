@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,24 +19,27 @@ public class ContainerManager {
     private String containerApiRepo;
 
     private String containerCommand;
+    private List<String> containerMounts;
     private OCIDataStore dataStore;
 
-    public ContainerManager(String containerName, String containerImage, String containerTag, String containerApiRepo, String containerRepo, OCIDataStore dataStore) {
+    public ContainerManager(String containerName, String containerImage, String containerTag, String containerApiRepo, String containerRepo, List<String> containerMounts, OCIDataStore dataStore) {
         this.containerName = containerName;
         this.containerImage = containerImage;
         this.containerTag = containerTag;
         this.containerApiRepo = containerApiRepo;
         this.containerRepo = containerRepo;
+        this.containerMounts = containerMounts;
         this.dataStore = dataStore;
     }
 
-    public ContainerManager(String containerName, String containerCommand, OCIDataStore dataStore) {
+    public ContainerManager(String containerName, String containerCommand, List<String> containerMounts, OCIDataStore dataStore) {
         this.containerName = containerName;
         this.containerImage = dataStore.getContainerImage(containerName);
         this.containerTag = dataStore.getContainerTag(containerName);
         this.containerApiRepo = dataStore.getContainerApiRepo(containerName);
         this.containerRepo = dataStore.getContainerRepo(containerName);
         this.containerCommand = containerCommand;
+        this.containerMounts = containerMounts;
         this.dataStore = dataStore;
     }
 
@@ -135,6 +139,14 @@ public class ContainerManager {
         }
 
         bwrapCommand.add("--bind "+containerDirectory+"/root / --chdir /"); // Bind the root to / inside the bwrap namespace
+
+        if (this.containerMounts != null) {
+            for (String mount : containerMounts) {
+                bwrapCommand.add("--bind "+mount.split(":")[0]+" "+mount.split(":")[1]); // Bind the mount to the destination specified in the config file
+            }
+        }
+
+        bwrapCommand.add("--ro-bind /etc/resolv.conf /etc/resolv.conf"); // Bind the host resolv.conf to the container
         bwrapCommand.add("--share-net"); // Share the network namespace
         bwrapCommand.add("--unshare-uts --hostname "+ (!hostname.isBlank() ? hostname : this.containerName+"-"+this.containerImage)); // Unshare the UTS namespace and set the hostname
         bwrapCommand.add("/bin/sh -c '"+(this.containerCommand != null ? this.containerCommand : cmd)+"'"); // Run the command specified in the config file or the command specified in the constructor

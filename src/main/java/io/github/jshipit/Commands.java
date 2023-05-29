@@ -3,10 +3,16 @@ package io.github.jshipit;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Parameters(commandDescription = "Open a shell in a container")
 class CommandShell {
     @Parameter(names = {"--name", "-n"}, description = "Name of the container", required = true)
     public String containerName;
+
+    @Parameter(names = {"--mount", "-m"}, description = "Mount a directory into the container", required = false)
+    public List<String> containerMount = new ArrayList<>();
 
     @Parameter(names = "--help", help = true)
     private boolean help;
@@ -19,6 +25,9 @@ class CommandStart {
 
     @Parameter(names = {"--command", "-c"}, description = "Command to run in the container", required = false)
     public String containerCommand = null;
+
+    @Parameter(names = {"--mount", "-m"}, description = "Mount a directory into the container", required = false)
+    public List<String> containerMount = new ArrayList<>();
 
     @Parameter(names = "--help", help = true)
     private boolean help;

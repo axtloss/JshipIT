@@ -71,7 +71,7 @@ public class SysUtils {
         if (Platform.isLinux()) {
             // unshare creates a new user namespace, so we can mount without root
             // This only works on Linux version 5.11 and above, which everyone should have by now
-            ProcessBuilder pb = new ProcessBuilder("unshare", "--user", "--map-root-user", "--mount", "mount", "-t", "overlay", "overlay", "-o", "lowerdir="+String.join(":", lower)+",upperdir="+upper+",workdir="+work, target);
+            ProcessBuilder pb = new ProcessBuilder("unshare", "--user", "--map-root-user", "--mount", "mount", "-t", "overlay", "overlay", "-o", "lowerdir="+String.join(":", lower)+",upperdir="+upper+",workdir="+work+",userxattr", target);
             pb.inheritIO();
             try {
                 Process p = pb.start();
