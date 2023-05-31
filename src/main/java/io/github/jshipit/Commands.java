@@ -41,6 +41,9 @@ class CommandCreate {
     @Parameter(names = {"--image", "-i"}, description = "Image of the container")
     public String containerImage;
 
+    @Parameter(names = {"--isolated", "-a"}, description = "If the container should be isolated from the host", required = false)
+    public boolean containerIsolated = true;
+
     @Parameter(names = "--help", help = true)
     private boolean help;
 }

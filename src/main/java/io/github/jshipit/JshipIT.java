@@ -49,7 +49,16 @@ public class JshipIT {
                 apiRepo = "registry.docker.io";
             }
 
-            ContainerManager containerManager = new ContainerManager(commandCreate.containerName, containerImage, commandCreate.containerImage.split(":")[1], apiRepo, containerRepo, null, dataStore);
+            ContainerManager containerManager = new ContainerManager(
+                    commandCreate.containerName,
+                    containerImage,
+                    commandCreate.containerImage.split(":")[1],
+                    apiRepo,
+                    containerRepo,
+                    commandCreate.containerIsolated,
+                    dataStore
+            );
+
             containerManager.createContainer();
         } else if (commands.getParsedCommand().equals("pull")) {
 
@@ -67,15 +76,39 @@ public class JshipIT {
             }
 
             System.out.println("Pulling image " + containerImage + " from " + apiRepo + "/" + containerRepo);
-            dataStore.createImage(apiRepo, containerRepo, containerImage, commandPull.containerImage.split(":")[1]);
+            dataStore.createImage(
+                    apiRepo,
+                    containerRepo,
+                    containerImage,
+                    commandPull.containerImage.split(":")[1]
+            );
+
         } else if (commands.getParsedCommand().equals("start")) {
-            ContainerManager containerManager = new ContainerManager(commandStart.containerName, commandStart.containerCommand, commandStart.containerMount, dataStore);
+            ContainerManager containerManager = new ContainerManager(
+                    commandStart.containerName,
+                    commandStart.containerCommand,
+                    commandStart.containerMount,
+                    dataStore
+            );
+
             containerManager.runCommand();
         } else if (commands.getParsedCommand().equals("shell")) {
-            ContainerManager containerManager = new ContainerManager(commandShell.containerName, "/bin/sh", commandShell.containerMount, dataStore); // A proper linux system should always have /bin/sh, skill issue if it doesn't
+            ContainerManager containerManager = new ContainerManager(
+                    commandShell.containerName,
+                    "/bin/sh", // A proper linux system should always have /bin/sh, skill issue if it doesn't
+                    commandShell.containerMount,
+                    dataStore
+            );
+
             containerManager.runCommand();
         } else if (commands.getParsedCommand().equals("delete")) {
-            ContainerManager containerManager = new ContainerManager(commandDelete.containerName, null, null, dataStore);
+            ContainerManager containerManager = new ContainerManager(
+                    commandDelete.containerName,
+                    null,
+                    null,
+                    dataStore
+            );
+
             containerManager.deleteContainer();
         }
     }
