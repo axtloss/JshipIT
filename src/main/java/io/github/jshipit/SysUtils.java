@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 package io.github.jshipit;
 
 import com.sun.jna.Platform;

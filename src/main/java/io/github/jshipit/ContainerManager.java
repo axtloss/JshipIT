@@ -209,13 +209,6 @@ public class ContainerManager {
             }
         }
 
-        if (configParser.getBoolean("permissions.mount-dev")) {
-            bwrapCommand.add("--dev /dev"); // Mount /dev
-        }
-
-        if (configParser.getBoolean("permissions.mount-proc")) {
-            bwrapCommand.add("--proc /proc"); // Mount /proc
-        }
 
         if (!configParser.getBoolean("permissions.unshare-net")) {
             bwrapCommand.add("--ro-bind /etc/resolv.conf /etc/resolv.conf"); // Bind the host resolv.conf to the container
@@ -251,12 +244,16 @@ public class ContainerManager {
         }
 
         if (configParser.getBoolean("permissions.mount-dev")) {
-            bwrapCommand.add("--dev /dev"); // Mount /dev
-        }
+            bwrapCommand.add("--dev-bind /dev /dev"); // Mount /dev
+        } else {
+	    bwrapCommand.add("--dev /dev"); // Make sure a seperate devfs exists
+	}
 
         if (configParser.getBoolean("permissions.mount-proc")) {
-            bwrapCommand.add("--proc /proc"); // Mount /proc
-        }
+            bwrapCommand.add("--bind /proc /proc"); // Mount /proc
+        } else {
+	    bwrapCommand.add("--proc /proc"); // Make sure a seperate procfs exists
+	}
     }
 
     /*
